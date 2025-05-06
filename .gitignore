@@ -1,0 +1,14 @@
+**/.env
+**/myenv
+
+venv/
+env/
+.env/
+__pycache__/
+
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.swn

@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  chroma-db:
+    image: chromadb/chroma:0.5.3
+    container_name: chroma-db
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_HOST=0.0.0.0
+      - CHROMA_PORT=8000
+      - CHROMA_TENANT=default_tenant
+      - CHROMA_DATABASE=default_database
+    volumes:
+      - chroma_data:/chroma
+    networks:
+      - manager_network
+
+  chroma-init:
+    build:
+      context: ./chroma
+      dockerfile: Dockerfile
+    container_name: chroma-init
+    depends_on:
+      - chroma-db
+    environment:
+      - CHROMA_HOST=chroma-db
+      - CHROMA_PORT=8000
+    networks:
+      - manager_network
+    # entrypoint: ["sh", "-c", "sleep 10 && python3 /app/init_collections.py"]
+
+  importer:
+    build:
+      context: ./importer
+      dockerfile: Dockerfile
+    container_name: importer
+    depends_on:
+      - chroma-db
+    environment:
+      - CHROMA_HOST=chroma-db
+      - CHROMA_PORT=8000
+      - CODE_DIR=/code
+    volumes:
+      - ./data/code:/code
+    networks:
+      - manager_network
+    restart: on-failure
+
+  # 3. UI-админка для просмотра БД
+  # chroma-ui:
+  #   build:
+  #     context: ./chroma-ui
+  #     dockerfile: Dockerfile
+  #   container_name: chroma-ui
+  #   ports:
+  #     - "8501:8501"
+  #   depends_on:
+  #     - chroma-db
+  #   environment:
+  #     - CHROMA_HOST=chroma-db
+  #     - CHROMA_PORT=8000
+  #   networks:
+  #     - manager_network
+
+volumes:
+  chroma_data:
+
+networks:
+  manager_network:
