@@ -47,6 +47,25 @@ services:
       - manager_network
     restart: on-failure
 
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ai-service
+    depends_on:
+      - chroma-db
+    # environment:
+    #   - CHROMA_HOST=chroma-db
+    #   - CHROMA_PORT=8000
+    #   - CODE_DIR=/code
+    volumes:
+      - ./ai-service:/code
+    networks:
+      - manager_network
+    ports:
+      - "3000:3000"
+    restart: on-failure
+
   # 3. UI-админка для просмотра БД
   # chroma-ui:
   #   build:
