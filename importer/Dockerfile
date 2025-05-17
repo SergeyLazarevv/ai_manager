@@ -1,12 +1,14 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /importer
 
-# Установка зависимостей
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование скрипта
-COPY loader.py /app/loader.py
+COPY . .
 
-CMD ["python", "loader.py"]
+# Открываем порт, на котором работает сервис (например, FastAPI)
+EXPOSE 3000
+
+# Команда запуска сервиса
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4000"]
