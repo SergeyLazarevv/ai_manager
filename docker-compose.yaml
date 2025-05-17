@@ -40,9 +40,12 @@ services:
     environment:
       - CHROMA_HOST=chroma-db
       - CHROMA_PORT=8000
-      - CODE_DIR=/code
+      - CODE_DIR=/importer
     volumes:
-      - ./data/code:/code
+      - ./importer:/importer
+      # - /home/sergey/projects/crocodile:/home/sergey/projects/crocodile
+    ports:
+      - "4000:4000"
     networks:
       - manager_network
     restart: on-failure
@@ -59,7 +62,7 @@ services:
     #   - CHROMA_PORT=8000
     #   - CODE_DIR=/code
     volumes:
-      - ./ai-service:/code
+      - ./ai-service:/ai-service
     networks:
       - manager_network
     ports:

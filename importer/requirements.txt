@@ -2,3 +2,8 @@ langchain
 chromadb
 sentence-transformers
 watchdog
+fastapi
+uvicorn
+requests
+pydantic
+hf_xet
