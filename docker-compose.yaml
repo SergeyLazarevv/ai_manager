@@ -43,7 +43,7 @@ services:
       - CODE_DIR=/importer
     volumes:
       - ./importer:/importer
-      # - /home/sergey/projects/crocodile:/home/sergey/projects/crocodile
+      - /home/sergey/projects/crocodile:/home/sergey/projects/crocodile
     ports:
       - "4000:4000"
     networks:
@@ -57,10 +57,11 @@ services:
     container_name: ai-service
     depends_on:
       - chroma-db
-    # environment:
-    #   - CHROMA_HOST=chroma-db
-    #   - CHROMA_PORT=8000
-    #   - CODE_DIR=/code
+    environment:
+      - CHROMA_HOST=chroma-db
+      - CHROMA_PORT=8000
+      - CHROMA_TENANT=default_tenant
+      - CHROMA_DATABASE=default_database
     volumes:
       - ./ai-service:/ai-service
     networks:
