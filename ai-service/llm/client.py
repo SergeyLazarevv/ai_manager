@@ -1,15 +1,52 @@
 from config.settings import Settings
 from llm.base import BaseLLMClient
 import httpx
-from dotenv import find_dotenv
+from dotenv import find_dotenv, load_dotenv
 import os
 from functools import lru_cache
-from dto.yandex_llm_request import YandexGPTRequest   
+from dto.yandex_llm_request import YandexGPTRequest
+from cachetools import TTLCache
+import time
 
 class Client(BaseLLMClient):
     def __init__(self, settings: Settings):
         self.url = settings.YANDEX_LLM_URL
-        self.token = 't1.9euelZrLmMyZypaRzImKl4-YxsmTju3rnpWaysialcbJyozLmJ3JmIqVmJLl8_cPB2w--e8SUk9Q_d3z9081aT757xJST1D9zef1656VmpbKkJnHiZ6RyJmTkM-Wz5WJ7_zF656VmpbKkJnHiZ6RyJmTkM-Wz5WJ.nB4y2R9TSB0x1xCbwusGlMCsHWTFKx4HBRP7qHc28OqLuHSgGCK4BeP33OK4z79kisRsjnWHXjT4nSS9OJ5LDQ'
+        self.auth = TTLCache(maxsize=1, ttl=3600)
+        load_dotenv()
+        self.oauth_token = os.getenv('YANDEX_OAUTH')
+        self.token_url = os.getenv('YANDEX_GET_TOKEN_URL')
+
+    def get_token(self):
+        if "token" in self.auth:
+            return self.auth["token"]
+        
+        # Запрашиваем новый токен
+        new_token = self.fetch_new_token()
+        self.auth["token"] = new_token
+        return new_token
+
+    def fetch_new_token(self):
+        print("Получаем новый токен...")
+        try:
+            response = httpx.post(
+                url=self.token_url,
+                headers={'Content-Type': 'application/json'},
+                json={'yandexPassportOauthToken': self.oauth_token},
+                timeout=30.0
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if 'iamToken' in data:
+                print("Success: Token получен")
+                return data['iamToken']
+            else:
+                print(f"Error: {data}")
+                raise Exception(f"Failed to get token: {data}")
+                
+        except Exception as e:
+            print(f"Error getting token: {str(e)}")
+            raise
 
     def query(self, prompt: str) -> str:
         print('in query method')
@@ -19,11 +56,11 @@ class Client(BaseLLMClient):
         response = httpx.post(
             url=self.url,
             headers={
-                "Authorization": f"Bearer {self.token}",
-                "Content-Type": "application/json"  # Явно указываем Content-Type
+                "Authorization": f"Bearer {self.get_token()}",
+                "Content-Type": "application/json"
             },
             json={
-                **request_data,  # Распаковываем данные из запроса
+                **request_data,
                 "max_tokens": 2000
             },
             timeout=60.0
